@@ -6,15 +6,14 @@ import logging
 from datetime import date, datetime as dt
 from pyspark.sql import SparkSession
 import pyspark.sql.utils
-from pyspark.sql.functions import col, regexp_extract, when
+from pyspark.sql.functions import regexp_extract, when
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 from dotenv import load_dotenv
 import os
 
-# Configuration
-
-# Code Description ......
+# Todo
+# 1. finish documentation
 
 def download_file(url, filename) -> "pyspark.sql.DataFrame":
 
@@ -50,10 +49,10 @@ def download_file(url, filename) -> "pyspark.sql.DataFrame":
     except Exception as e:
         logging.error(f"An error occured extracting the data: {str(e)}")
 
-def spark_processing(spark_df) -> "pyspark.sql.DataFrame":
+def spark_processing(spark_df) -> pyspark.sql.DataFrame:
 
     """
-    Takes a raw spark df and filters the datato get a smaller set of titleIds.
+    Takes a raw spark df and filters the data to get a smaller set of titleIds.
 
     Args:
         df (Spark dataframe): raw data containing IMDBs titleIDs and other data.
