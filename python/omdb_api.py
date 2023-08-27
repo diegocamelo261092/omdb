@@ -10,9 +10,6 @@ from pyspark.sql import SparkSession
 import pyspark.sql.utils
 import time
 
-# todo: add overall description here
-
-
 def snowflake_connection() -> snowflake.connector.connection:
 
     """ Creates a connection to Snowflake.
@@ -33,6 +30,7 @@ def snowflake_connection() -> snowflake.connector.connection:
             schema=os.getenv('schema')
             )
         logging.info("Successfully connected to Snowflake.")
+        print('-'*80)
         return conn
 
     except Exception as e:
@@ -51,6 +49,8 @@ def retrieve_ids(conn, query) -> pyspark.sql.DataFrame:
         cur.execute(query)
         rows = cur.fetchall()
         sdf = spark.createDataFrame(rows, schema=['titleId'])
+        logging.info(f"Successfully retrieved titleids for query: {query}.")
+        print('-'*80)
         return sdf
         
     except Exception as e:
@@ -60,7 +60,7 @@ def retrieve_ids(conn, query) -> pyspark.sql.DataFrame:
 def get_ids_sample(imdb_df, omdb_df) -> list:
 
     """ Gets a small random sample of titleids by comparing the imdb and omdb dataframes,
-    and identifying the ones that are not in both.
+    and identifying the titleids not yet present in the omdb df.
 
     Returns:
         missing_ids_sample: titleids to be queried from OMDB API.
@@ -71,45 +71,75 @@ def get_ids_sample(imdb_df, omdb_df) -> list:
         n_missing_ids = missing_ids.count()
         sample_size = 50
         fraction = sample_size/n_missing_ids
-        print(fraction)
         missing_ids_sample = missing_ids.sample(fraction=fraction).toPandas()
         missing_ids_sample = missing_ids_sample['titleId'].tolist()
-        logging.info(f"{missing_ids.count()} rows not found in Snowflake table.")
+        logging.info(f"{missing_ids.count()} rows not found in OMDB RAW Snowflake table.")
+        print('-'*80)
         return missing_ids_sample
+
     except Exception as e:
         logging.error(f"An error occured while loading data from the db: {str(e)}")
 
-def populate_omdb_table(titleids_sample) -> pd.DataFrame:
+def get_omdb_data(titleids_sample) -> pd.DataFrame:
 
-    data = [] # List to store retrieved data
+    """ Takes a list of titleids and retrieves the corresponding omdb data.
 
-    for id in titleids_sample:
-        # Send API request for movie data
-        response = requests.get(f'http://www.omdbapi.com/?i={id}&apikey={api_key}')
-        
-        # Convert API response to dictionary
-        movie_data = response.json()
-        
-        # Add movie data to list
-        data.append(movie_data)
-        time.sleep(0.5)
-        print(id)
+    Returns:
+        omdb_movies: sample df containing movies data such as title, year, imdb rating, etc.
+    """
 
-    # Convert data list to DataFrame
-    omdb_movies = pd.DataFrame(data)
+    movies_data = []
 
-    # capitalize all column names
-    omdb_movies.columns = omdb_movies.columns.str.upper()
+    try:
 
-    return omdb_movies
+        for id in titleids_sample:
+            # Send API request for movie data
+            response = requests.get(f'http://www.omdbapi.com/?i={id}&apikey={api_key}')
+            
+            # Convert API response to dictionary
+            r = response.json()
+            
+            # Add movie data to list
+            movies_data.append(r)
+            time.sleep(0.1)
+
+        movies_df = pd.DataFrame(movies_data)
+        movies_df.columns = movies_df.columns.str.upper()
+        movies_df = movies_df[movies_df['TYPE'] == 'movie']
+        logging.info(f"Successfully retrieved {len(movies_df)} movies' data from the OMDB API.")
+        print('-'*80)
+
+        return movies_df
+    
+    except Exception as e:
+        logging.error(f"An error occured while sending requests to the API: {str(e)}")
+
+def write_movies_data(conn, movies_df) -> None:
+
+    # *: JSON response might vary depending on the API call.
+    # If a new column is retrieved an error would be thrown.
+    # todo: solve this issue.
+
+    try:
+        write_pandas(conn, movies_df, "OMDB_RAW")
+        conn.close()
+        logging.info('Movie data written to database.')
+        print('-'*80)        
+
+    except Exception as e:
+        logging.error(f"An error occured writing the data to the db: {str(e)}")    
 
 def main():
+
+    # * Step 1: Create Snowflake connection
     conn = snowflake_connection()
+    # * Step 2: Get sample of titleids to be queried from OMDB API.
     imdb_df = retrieve_ids(conn, 'select title_id from omdb.LANDING.imdb_ids')
     omdb_df = retrieve_ids(conn, 'select imdbid from omdb.landing.omdb_raw')
     missing_ids_sample = get_ids_sample(imdb_df, omdb_df)
-    final_df = populate_omdb_table(missing_ids_sample)
-    print(final_df.head(10))
+    # * Step 3: Get movie data from OMDB API and write to database.
+    movie_df = get_omdb_data(missing_ids_sample)
+    write_movies_data(conn, movie_df)
 
 if __name__ == '__main__':
     begin = dt.now()

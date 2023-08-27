@@ -23,6 +23,7 @@ https://www.imdb.com/interfaces/
 - Write documentation (Readme)
     - Explain project process
     - Explain dependencies
+- Changing schema in OMDB API (check comments in file)
 
 # Tools & frameworks to explore
 - Unit tests
