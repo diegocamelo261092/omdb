@@ -24,6 +24,8 @@ https://www.imdb.com/interfaces/
     - Explain project process
     - Explain dependencies
 - Changing schema in OMDB API (check comments in file)
+- Scrape data from Pathe: https://en.pathe.nl/films/actueel
+- Implement resource monitor in Snowflake
 
 # Tools & frameworks to explore
 - Unit tests
