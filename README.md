@@ -53,3 +53,6 @@ https://docs.snowflake.com/en/user-guide/cost-controlling
 - Spark
 - Calling an API
 - Snowflake
+
+# Requirements
+https://github.com/snowflakedb/snowflake-connector-python
