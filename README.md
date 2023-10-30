@@ -56,3 +56,5 @@ https://docs.snowflake.com/en/user-guide/cost-controlling
 
 # Requirements
 https://github.com/snowflakedb/snowflake-connector-python
+
+Trying to do a commit with my personal user
