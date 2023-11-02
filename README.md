@@ -1,33 +1,42 @@
-# omdb
+# What's on the movies?
 
-# Steps
-- 1. Get titleids from IMDB, write new data to Snowflake DB.
-https://www.imdb.com/interfaces/
-- 2. Use titleids to extract movie information from OMDB API.
-- 3. Check how to orchestrate these two steps (Airflow, Prefect).
-- 4. Check how to put this code into production (check cloud solutions: gcp, codespaces?)
-- 5. Transform the data with dbt, integrate to flow.
+The overall idea of this project is to retrieve movies being displayed in the local cinema and return back the relevant information such as the IMDB ratings.
 
-# Visual Studio
-- How to use the same way as Pycharm?
-- How to debug?
-- What are the best plugins?
+# Project Stages
 
-# Todo:
-- Spark fixes:
-    - Revisar WARN TaskSetManager: stage contains a task of very large size
-    - WARN GarbageCollectionMetrics
-    - You have an incompatible version of 'pyarrow' installed (11.0.0), please install a version that adheres to: 'pyarrow<10.1.0,>=10.0.1; extra == "pandas"'
-    - WARN NativeCodeLoader: Unable to load native-hadoop library for your platform...
-- Check if I can filter for movies only
-- Write documentation (Readme)
-    - Explain project process
-    - Explain dependencies
+## Movie Ratings
+
+### IMDB's IDs
+Retrieve the data available from IMDB non-commercial datasets. IMDB provides some data sets although we only use it to retrieve the unique identifiers of the movie that we later use to query data through OMDBs free API. 
+
+- Download flat-file from [IMDB](https://www.imdb.com/interfaces/).
+- Process data (e.g. filtering) to deliver unique identifiers.
+    - Check filter for movies only
+- Write data to Snowflake DB.
+- Query daily to get new values.
+
+### OMDB's ratings
+Retrieve movie's data from OMDB's api respecting the daily limits, uses IMDB's IDs as input and data is stored in Snowflake.
+
+## Now playing
+Retrieve data of what movies are currently playing from local cinema by scrapping the UI of the webpage being mindful of the usage.
+
+- [Pathe now playing](https://en.pathe.nl/films/actueel)
+
+TBD
+
+# Deployment
+
+## Wishlist
+- Orchestrate SQL processing using dbt core.
+- Orchestrate these two steps using Prefect.
+- Compute alternatives: EC2, raspberry pi, Snowflake, codespaces.
+- [Implement cost management best practices](https://docs.snowflake.com/en/user-guide/cost-controlling)
+- Keep Readme up to date
+    - Create diagram of the flow
 - Changing schema in OMDB API (check comments in file)
-- Scrape data from Pathe: https://en.pathe.nl/films/actueel
+- Scrape data from Pathe: 
 - Implement resource monitor in Snowflake
-
-# Tools & frameworks to explore
 - Unit tests
 - Pydantic
 - Poetry (package management) 
@@ -38,23 +47,15 @@ https://www.imdb.com/interfaces/
 - Check repo best practices here: https://towardsdatascience.com/how-to-structure-an-ml-project-for-reproducibility-and-maintainability-54d5e53b4c82
 - Tableau
 
-# DB Optimization
-- Change varchar type
-- Check cost cap in Snowflake
-https://docs.snowflake.com/en/user-guide/cost-controlling
+## Dependencies
+https://github.com/snowflakedb/snowflake-connector-python
 
-# What I have learnt
+## Learnings
 - Software Development best practices:
     - Documentation
     - Except type output (check naming)
     - Exception handling
     - Functions
     - Main clause
-- Spark
 - Calling an API
 - Snowflake
-
-# Requirements
-https://github.com/snowflakedb/snowflake-connector-python
-
-Trying to do a commit with my personal user
