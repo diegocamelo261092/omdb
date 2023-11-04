@@ -46,6 +46,7 @@ TBD
 - https://github.com/Kanaries/pygwalker
 - Check repo best practices here: https://towardsdatascience.com/how-to-structure-an-ml-project-for-reproducibility-and-maintainability-54d5e53b4c82
 - Tableau
+- Use polars instead of Pandas
 
 ## Dependencies
 https://github.com/snowflakedb/snowflake-connector-python
